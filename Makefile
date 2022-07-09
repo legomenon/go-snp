@@ -1,6 +1,9 @@
 postgres:
 	docker run --name goSnp -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres
 
+rundb:
+	docker start goSnp
+
 createdb:
 	docker exec -it goSnp  createdb --username=root --owner=root goSnpDB 
 

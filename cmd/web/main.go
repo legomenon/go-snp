@@ -4,16 +4,18 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"go-snp/internal/models"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -27,11 +29,12 @@ func main() {
 	if err != nil {
 		errorLog.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	defer db.Close(context.Background())
+	defer db.Close()
 
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	srv := &http.Server{
@@ -45,12 +48,11 @@ func main() {
 	errorLog.Fatal(err)
 }
 
-func openDB(dsn string) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(context.Background(), dsn)
+func openDB(dsn string) (*pgxpool.Pool, error) {
+	conn, err := pgxpool.Connect(context.Background(), dsn)
 	if err != nil {
 		return nil, err
 	}
-	// defer conn.Close(context.Background())
 
 	err = conn.Ping(context.Background())
 	if err != nil {
