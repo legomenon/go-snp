@@ -11,3 +11,9 @@ snippet app
 - "/", app.home "GET"
 - "/snippet", app.showSnippet "GET:id"
 - "/snippet/create" "POST"
+
+Generate tls certificate:
+
+```bash
+go run /usr/lib/go/src/crypto/tls/generate_cert.go --rsa-bits=2048 --host=localhost
+```

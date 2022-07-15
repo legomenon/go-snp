@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -58,14 +59,22 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+		Addr:         *addr,
+		ErrorLog:     errorLog,
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		TLSConfig:    tlsConfig,
 	}
 
 	infoLog.Printf("Starting server on %s\n", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 }
 
@@ -82,7 +91,7 @@ func openDB(dsn string) (*pgxpool.Pool, *sql.DB, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println("connect to postgres")
+	fmt.Println("INFO\tsuccessfully connected to postgres")
 
 	nativeDB, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -93,7 +102,7 @@ func openDB(dsn string) (*pgxpool.Pool, *sql.DB, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println("native connect to postgres")
+	fmt.Println("INFO\tsuccessfully connected native driver to postgres")
 
 	return conn, nativeDB, nil
 }
