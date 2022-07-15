@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS "snippets" (
   "date_created" timestamp DEFAULT (now()),
   "expires" timestamp 
 );
+
