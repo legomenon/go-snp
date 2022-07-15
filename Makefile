@@ -11,6 +11,8 @@ dropdb:
 	docker exec -it goSnp  dropdb goSnpDB
 
 # migrate create -seq -ext=.sql -dir=./migrations create_snippet_table
+# migrate create -seq -ext=.sql -dir=./migrations create_sessions_table
+
 migrateup:
 	migrate -path=./migrations -database=postgres://root:secret@localhost/goSnpDB?sslmode=disable up
 
