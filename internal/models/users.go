@@ -33,7 +33,10 @@ func (m *UserModel) Insert(name, email, password string) error {
 	INSERT INTO users (name, email, hashed_password)
 	VALUES($1, $2, $3)
 	`
-	_, err = m.DB.Exec(context.Background(), query, name, email, string(hashedPassword))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = m.DB.Exec(ctx, query, name, email, string(hashedPassword))
 	if err != nil {
 		if err, ok := err.(*pgconn.PgError); ok && err.Code == "23505" { // unique violation
 			return ErrDuplicateEmail
@@ -50,7 +53,10 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 
 	query := "SELECT id, hashed_password FROM users WHERE email = $1;"
 
-	err := m.DB.QueryRow(context.Background(), query, email).Scan(&id, &hashedPassword)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRow(ctx, query, email).Scan(&id, &hashedPassword)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return 0, ErrInvalidCredentials
@@ -72,5 +78,10 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 }
 
 func (m *UserModel) Exists(id int) (bool, error) {
-	return false, nil
+	var exists bool
+	stmt := "SELECT EXISTS(SELECT true FROM users WHERE id = $1)"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err := m.DB.QueryRow(ctx, stmt, id).Scan(&exists)
+	return exists, err
 }
