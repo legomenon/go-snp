@@ -28,7 +28,11 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 		RETURNING id;
 	`
 	id := 0
-	err := m.DB.QueryRow(context.Background(), query, title, content, expires).Scan(&id)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRow(ctx, query, title, content, expires).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -42,7 +46,11 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 		WHERE expires > date_created AND id = $1;
 	`
 	data := &Snippet{}
-	err := m.DB.QueryRow(context.Background(), query, id).Scan(&data.Title, &data.Content, &data.Created, &data.Expires)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRow(ctx, query, id).Scan(&data.Title, &data.Content, &data.Created, &data.Expires)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNoRecord
@@ -58,7 +66,11 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 		SELECT id,title,content,date_created,expires FROM snippets
 		WHERE expires > date_created ORDER BY id DESC LIMIT 10;
 	`
-	rows, err := m.DB.Query(context.Background(), query)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
