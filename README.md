@@ -8,9 +8,14 @@ snippet app
 
 ## handlers
 
-- "/", app.home "GET"
-- "/snippet", app.showSnippet "GET:id"
-- "/snippet/create" "POST"
+- "/"
+- "/snippet"
+- "/snippet/create"
+-	"/snippet/view/:id"
+- "/user/signup" POST
+-	"/user/signup"
+- "/user/login" POST
+-	"/user/login"
 
 Generate tls certificate:
 
